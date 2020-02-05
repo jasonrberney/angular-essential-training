@@ -10,54 +10,49 @@ import { lookupListToken } from '../providers';
   styleUrls: ['./media-item-form.component.css']
 })
 export class MediaItemFormComponent implements OnInit {
-    form: FormGroup;
+  form: FormGroup;
 
-    constructor(
-        private formBuilder: FormBuilder,
-        private mediaItemService: MediaItemService,
-        @Inject(lookupListToken) public lookupLists,
-        private router: Router
-    ) {
+  constructor(
+    private formBuilder: FormBuilder,
+    private mediaItemService: MediaItemService,
+    @Inject(lookupListToken) public lookupLists,
+    private router: Router) {}
 
+  ngOnInit() {
+    this.form = this.formBuilder.group({
+      medium: this.formBuilder.control('Movies'),
+      name: this.formBuilder.control('', Validators.compose([
+        Validators.required,
+        Validators.pattern('[\\w\\-\\s\\/]+')
+      ])),
+      category: this.formBuilder.control(''),
+      year: this.formBuilder.control('', this.yearValidator),
+    });
+  }
+
+  yearValidator(control: FormControl) {
+    if (control.value.trim().length === 0) {
+      return null;
     }
-    
-    ngOnInit() {
-        this.form = this.formBuilder.group({
-            medium: this.formBuilder.control('Movies'),
-            name: this.formBuilder.control('', Validators.compose([
-                Validators.required,
-                Validators.pattern('[\\w\\-\\s\\/]+')
-            ])),
-            category: this.formBuilder.control(''),
-            year: this.formBuilder.control('', this.yearValidator)
-        });
-    }
-
-    yearValidator(control: FormControl) {
-        if (control.value.trim().length === 0) {
-            return null;
+    const year = parseInt(control.value, 10);
+    const minYear = 1900;
+    const maxYear = 2100;
+    if (year >= minYear && year <= maxYear) {
+      return null;
+    } else {
+      return {
+        year: {
+          min: minYear,
+          max: maxYear
         }
-        const year = parseInt(control.value, 10);
-        const minYear = 1800;
-        const maxYear = 2500;
-        if (year >= minYear && year <= maxYear) {
-            return null;
-        }
-        else {
-            return { 
-                year: {
-                    min: minYear,
-                    max: maxYear
-                } 
-            };
-        }
+      };
     }
+  }
 
-    onSubmit(mediaItem) {
-        console.log(mediaItem);
-        this.mediaItemService.add(mediaItem)
-            .subscribe(() => {
-                this.router.navigate(['/', mediaItem.medium]);
-            });
-    }
+  onSubmit(mediaItem) {
+    this.mediaItemService.add(mediaItem)
+      .subscribe(() => {
+        this.router.navigate(['/', mediaItem.medium]);
+      });
+  }
 }
